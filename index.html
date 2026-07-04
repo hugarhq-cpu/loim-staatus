@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="et">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lõim — Arenduste tabel</title>
+<style>
+  :root{--bg:#0D0F14;--card:#161922;--line:#252A36;--txt:#ECECEC;--muut:#8A93A6;--kuld:#D4AF6A;--hele:#ECD9A8;--indigo:#5848F6;--roh:#3FB950;--kol:#E3A008;--pun:#F85149;--hall:#6E7681;}
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font-family:-apple-system,Segoe UI,Roboto,sans-serif;padding:24px 16px;max-width:1100px;margin:0 auto;line-height:1.5}
+  h1{color:var(--kuld);font-size:24px;margin-bottom:4px}
+  .sub{color:var(--muut);font-size:13px;margin-bottom:8px}
+  .bar{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0;align-items:center}
+  button{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer}
+  button:hover{border-color:var(--kuld)}
+  button.on{background:var(--kuld);color:#000;border-color:var(--kuld);font-weight:600}
+  .tools{margin-left:auto;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .pset{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 14px;margin:0 0 8px;font-size:13px;display:none;gap:16px;flex-wrap:wrap;align-items:center}
+  .pset.on{display:flex}
+  .pset label{display:flex;gap:6px;align-items:center;color:var(--muut);cursor:pointer}
+  h2{color:var(--hele);font-size:15px;margin:26px 0 10px;padding-bottom:6px;border-bottom:1px solid var(--line);letter-spacing:1px;text-transform:uppercase}
+  table{width:100%;border-collapse:collapse;font-size:13px;margin-bottom:8px}
+  th{text-align:left;color:var(--muut);font-weight:600;padding:8px 10px;border-bottom:1px solid var(--line);font-size:11px;text-transform:uppercase}
+  td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+  tr:hover td{background:#12151d}
+  .nimi{font-weight:600;color:var(--hele);white-space:nowrap}
+  .pct{min-width:130px}
+  .pctbar{height:6px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:4px}
+  .pctfill{height:100%;border-radius:3px}
+  .badge{font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;white-space:nowrap;border:1px solid var(--line)}
+  .kaik{color:var(--muut);font-size:12px}
+  footer{margin-top:30px;color:var(--muut);font-size:11px;text-align:center;line-height:1.8}
+  .err{color:var(--pun);padding:20px;text-align:center}
+  @media print{
+    html,body{background:#fff!important;color:#000!important}
+    body{max-width:none;padding:0;font-size:11px}
+    .bar,.pset,footer{display:none!important}
+    h1,h2,.nimi{color:#000!important}
+    h2{border-color:#000}
+    .sub,.kaik,th{color:#333!important}
+    table,td,th{border-color:#999!important}
+    tr:hover td{background:none!important}
+    .badge{border:1px solid #999;color:#000!important;background:none!important}
+    .pctbar{border:1px solid #999;background:#fff!important}
+    .pctfill{background:#666!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body>
+<h1>Lõim — Arenduste tabel</h1>
+<div class="sub">Reaalajas GitHubist · <span id="cnt">laen…</span></div>
+<div class="bar">
+  <span class="tools">
+    <button id="printBtn">🖨️ Prindi</button>
+    <button onclick="location.reload()">🔄 Värskenda</button>
+  </span>
+</div>
+<div class="pset" id="pset">
+  <strong style="color:var(--hele)">Prindi:</strong>
+  <button id="doPrint" style="background:var(--kuld);color:#000;font-weight:600">Prindi nüüd (valge taust)</button>
+</div>
+<h2>Ülevaade</h2>
+<table id="tbl"><thead><tr><th>Arendus</th><th>%</th><th>Viimane käik</th><th>Järgmine käik</th></tr></thead><tbody><tr><td colspan="4" class="kaik">Laen STAATUS.md…</td></tr></tbody></table>
+<footer>Allikas: hugarhq-cpu/loim-staatus → STAATUS.md · uueneb git-pushil (Värskenda-nupp)</footer>
+<script>
+const RAW="https://raw.githubusercontent.com/hugarhq-cpu/loim-staatus/main/STAATUS.md";
+function pctColor(p){return p>=100?"var(--roh)":p>=60?"var(--kuld)":p>=30?"var(--kol)":"var(--hall)"}
+function parseRows(md){
+  const rows=[];const lines=md.split("\n");
+  for(const ln of lines){
+    const m=ln.trim();
+    if(m.startsWith("|")&&!m.includes("---")&&!/Arendus\s*\|/i.test(m)){
+      const c=m.split("|").map(x=>x.trim()).filter(x=>x!=="");
+      if(c.length>=4) rows.push(c);
+    }
+  }
+  return rows;
+}
+async function load(){
+  try{
+    const r=await fetch(RAW+"?t="+Date.now());
+    if(!r.ok)throw new Error(r.status);
+    const md=await r.text();
+    const rows=parseRows(md);
+    const tb=document.querySelector("#tbl tbody");tb.innerHTML="";
+    rows.forEach(c=>{
+      const pctNum=parseInt((c[1].match(/\d+/)||[0])[0]);
+      const tr=document.createElement("tr");
+      tr.innerHTML='<td class="nimi">'+c[0]+'</td>'+
+        '<td class="pct"><span class="badge">'+c[1]+'</span><div class="pctbar"><div class="pctfill" style="width:'+pctNum+'%;background:'+pctColor(pctNum)+'"></div></div></td>'+
+        '<td class="kaik">'+(c[2]||'')+'</td><td class="kaik">'+(c[3]||'')+'</td>';
+      tb.appendChild(tr);
+    });
+    document.getElementById("cnt").textContent=rows.length+" arendust · "+new Date().toLocaleString("et");
+  }catch(e){
+    document.querySelector("#tbl tbody").innerHTML='<tr><td colspan="4" class="err">Ei saanud GitHubist lugeda ('+e.message+'). Kontrolli: repo peab olema AVALIK, et raw töötaks. Privaatse puhul kasuta lokaalset arendused.html.</td></tr>';
+    document.getElementById("cnt").textContent="viga";
+  }
+}
+document.getElementById("printBtn").onclick=()=>document.getElementById("pset").classList.toggle("on");
+document.getElementById("doPrint").onclick=()=>window.print();
+load();
+</script>
+</body>
+</html>
