@@ -1,11 +1,11 @@
 # Lõim — arenduste staatus
 
 Avalik seisu-fail. AINULT nimi + % + käigud. Uueneb kui agent arenduse seisu muudab.
-Genereeritud vaultist (privaatne). Uuendatud: 2026-07-04.
+Genereeritud vaultist (privaatne). Uuendatud: 2026-07-05.
 
 | Arendus | % | Viimane käik | Järgmine käik |
 |---|---|---|---|
-| Märkmed | 85% | Salvestus taastatud | Noodifunktsioon |
+| Märkmed | 90% | Salvestus taastatud | Noodifunktsioon |
 | Tšeki | 80% | Privaatne repo + git | AI kokku/makstud fix |
 | Märkmete-keskus | 30% | Avaekraani struktuur | AppHeader kõigile |
 | YouTube Pipeline | 100% | Töötab | Suunata ALLIKAD/-sse |
